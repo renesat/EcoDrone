@@ -13,7 +13,7 @@ class TrashDetector(pl.LightningModule):
         pretrained: bool = True,
     ):
         super().__init__()
-        self.model = torchvision.models.segmentation.deeplabv3_resnet101(
+        self.model = torchvision.models.segmentation.deeplabv3_mobilenet_v3_large(  # torchvision.models.segmentation.deeplabv3_resnet101(
             pretrained=pretrained,
         )
         self.model.classifier[4] = nn.Conv2d(
@@ -23,7 +23,7 @@ class TrashDetector(pl.LightningModule):
             stride=(1, 1),
         )
         self.model.aux_classifier[4] = nn.Conv2d(
-            256,
+            10,
             1,
             kernel_size=(1, 1),
             stride=(1, 1),
