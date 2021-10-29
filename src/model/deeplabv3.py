@@ -19,9 +19,17 @@ class TrashDetector(pl.LightningModule):
 
     def training_step(self, batch, batch_idx):
         x, y = batch
-        x = x.view(x.size(0), -1)
-        x_hat = self.decoder(z)
-        loss = F.binary_cross_entropy(x_hat, x)
+        out = self.forward(x)
+        loss = F.binary_cross_entropy(out, x)
+
+        self.log("train_loss", loss)
+
+        return loss
+
+    def val_step(self, batch, batch_idx):
+        x, y = batch
+        out = self.forward(x)
+        loss = F.binary_cross_entropy(out, x)
 
         self.log("train_loss", loss)
 

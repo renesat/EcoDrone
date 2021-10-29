@@ -18,7 +18,7 @@ class TrashDataset(Dataset):
         self.transform = transform
 
     def __len__(self):
-        return len(self.annotations.shape[0])
+        return self.annotations.shape[0]
 
     @staticmethod
     def region_to_mask(region, image):
