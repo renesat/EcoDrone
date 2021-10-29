@@ -54,6 +54,22 @@ class TrashDetector(pl.LightningModule):
 
         self.log("val/loss", loss)
 
+        if batch_idx == 0:
+            img = (
+                x * torch.Tensor([0.229, 0.224, 0.225]).resize(1, 3, 1, 1)
+                + torch.Tensor(
+                    [
+                        0.485,
+                        0.456,
+                        0.406,
+                    ]
+                ).resize(1, 3, 1, 1)
+            )
+            img[img > 1] = 1
+            img[img < 0] = 0
+            self.logger.experiment.add_image("val/img1", img[0], batch_idx)
+            self.logger.experiment.add_image("val/img2", img[1], batch_idx)
+
         return {
             "loss": loss,
             "iou": iou,
