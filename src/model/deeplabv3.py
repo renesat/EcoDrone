@@ -3,6 +3,8 @@ import pytorch_lightning as pl
 import torch
 import torch.nn as nn
 import torchvision
+import torchvision.transforms.functional as TVF
+from torchvision.utils import draw_segmentation_masks
 
 
 class TrashDetector(pl.LightningModule):
@@ -67,8 +69,24 @@ class TrashDetector(pl.LightningModule):
             )
             img[img > 1] = 1
             img[img < 0] = 0
-            self.logger.experiment.add_image("val/img1", img[0], batch_idx)
-            self.logger.experiment.add_image("val/img2", img[1], batch_idx)
+            self.logger.experiment.add_image(
+                "val/img1",
+                draw_segmentation_masks(
+                    (img[0] * 255).type(torch.ByteTensor),
+                    out_result[0],
+                    alpha=0.8,
+                ),
+                batch_idx,
+            )
+            self.logger.experiment.add_image(
+                "val/img2",
+                draw_segmentation_masks(
+                    (img[1] * 255).type(torch.ByteTensor),
+                    out_result[1],
+                    alpha=0.8,
+                ),
+                batch_idx,
+            )
 
         return {
             "loss": loss,
@@ -87,8 +105,8 @@ class TrashDetector(pl.LightningModule):
         self.log("val/IoU", mIoU)
         self.log("val/DSC", mDSC)
 
-        print(f"{mIoU=}")
-        print(f"{mDSC=}")
+        print(f"mIoU = {mIoU}")
+        print(f"mDSC = {mDSC}")
 
     def configure_optimizers(self):
         optimizer = torch.optim.Adam(self.parameters(), lr=1e-3)
