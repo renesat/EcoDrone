@@ -52,7 +52,11 @@ class TrashDetector(pl.LightningModule):
         iou = (out_result & y.bool()).sum(dim=(1, 2)) / (
             (out_result | y.bool()).sum(dim=(1, 2)) + 1e-8
         )
-        dsc = 2 * (out_result & y.bool()).sum(dim=(1, 2)) / (out_result.sum() + y.sum())
+        dsc = (
+            2
+            * (out_result & y.bool()).sum(dim=(1, 2))
+            / (out_result.sum(dim=(1, 2)) + y.sum(dim=(1, 2)))
+        )
 
         self.log("val/loss", loss)
 
