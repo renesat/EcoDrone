@@ -100,8 +100,8 @@ class TrashDetector(pl.LightningModule):
         mIoU = []
         mDSC = []
         for item in epoches_output:
-            mIoU.extend(list(item["iou"]))
-            mDSC.extend(list(item["dsc"]))
+            mIoU.extend(list(item["iou"].detach().cpu().numpy()))
+            mDSC.extend(list(item["dsc"].detach().cpu().numpy()))
         mIoU = np.mean(mIoU)
         mDSC = np.mean(mDSC)
         self.log("val/IoU", mIoU)
