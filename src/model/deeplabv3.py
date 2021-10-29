@@ -1,3 +1,4 @@
+import numpy as np
 import pytorch_lightning as pl
 import torch
 import torch.nn as nn
@@ -32,22 +33,46 @@ class TrashDetector(pl.LightningModule):
     def training_step(self, batch, batch_idx):
         x, y = batch
         out = self.forward(x)
-        # print(nn.Sigmoid()(out["out"].mean(dim=1)).shape)
-        loss = nn.BCELoss()(nn.Sigmoid()(out["out"]).squeeze(1), y.float())
+        out = nn.Sigmoid()(out["out"]).squeeze(1)
+        loss = nn.BCELoss()(out.float(), y.float())
 
-        self.log("train_loss", loss)
+        self.log("train/loss", loss)
 
         return loss
 
-    def val_step(self, batch, batch_idx):
-        print(x.shape)
+    def validation_step(self, batch, batch_idx):
         x, y = batch
         out = self.forward(x)
-        loss = nn.BCELoss()(out, x)
+        out = nn.Sigmoid()(out["out"]).squeeze(1)
+        loss = nn.BCELoss()(out.float(), y.float())
 
-        self.log("train_loss", loss)
+        out_result = (out > 0.5).bool()
+        iou = (out_result & y.bool()).sum(dim=(1, 2)) / (
+            (out_result | y.bool()).sum(dim=(1, 2)) + 1e-8
+        )
+        dsc = 2 * (out_result & y.bool()).sum(dim=(1, 2)) / (out_result.sum() + y.sum())
 
-        return loss
+        self.log("val/loss", loss)
+
+        return {
+            "loss": loss,
+            "iou": iou,
+            "dsc": dsc,
+        }
+
+    def validation_epoch_end(self, epoches_output):
+        mIoU = []
+        mDSC = []
+        for item in epoches_output:
+            mIoU.extend(list(item["iou"]))
+            mDSC.extend(list(item["dsc"]))
+        mIoU = np.mean(mIoU)
+        mDSC = np.mean(mDSC)
+        self.log("val/IoU", mIoU)
+        self.log("val/DSC", mDSC)
+
+        print(f"{mIoU=}")
+        print(f"{mDSC=}")
 
     def configure_optimizers(self):
         optimizer = torch.optim.Adam(self.parameters(), lr=1e-3)
