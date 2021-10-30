@@ -3,9 +3,11 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+import torch
 import torchvision.transforms.functional as TVF
 from PIL import Image, ImageDraw
 from torch.utils.data import Dataset
+from torchvision.utils import draw_segmentation_masks
 
 
 class TrashDataset(Dataset):
@@ -22,7 +24,7 @@ class TrashDataset(Dataset):
         return self.annotations.shape[0]
 
     def view_item(self, idx):
-        img, _ = self[idx]
+        img, mask = self[idx]
         img = (
             img * torch.Tensor([0.229, 0.224, 0.225]).to(img.device).resize(3, 1, 1)
             + torch.Tensor(
@@ -37,7 +39,13 @@ class TrashDataset(Dataset):
         )
         img[img > 1] = 1
         img[img < 0] = 0
-        return TVF.to_pil_image(img)
+        return (
+            draw_segmentation_masks(
+                (img * 255).type(torch.ByteTensor),
+                torch.Tensor(mask).bool(),
+                alpha=0.8,
+            ),
+        )
 
     @staticmethod
     def region_to_mask(region, image):
