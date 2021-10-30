@@ -82,7 +82,7 @@ class TrashDetector(pl.LightningModule):
                     out_result[0],
                     alpha=0.8,
                 ),
-                batch_idx,
+                self.current_epoch,
             )
             self.logger.experiment.add_image(
                 "val/img2",
@@ -91,7 +91,7 @@ class TrashDetector(pl.LightningModule):
                     out_result[1],
                     alpha=0.8,
                 ),
-                batch_idx,
+                self.current_epoch,
             )
 
         return {
