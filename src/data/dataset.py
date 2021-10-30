@@ -39,12 +39,12 @@ class TrashDataset(Dataset):
         )
         img[img > 1] = 1
         img[img < 0] = 0
-        return (
+        return TVF.to_pil_image(
             draw_segmentation_masks(
                 (img * 255).type(torch.ByteTensor),
                 torch.Tensor(mask).bool(),
                 alpha=0.8,
-            ),
+            )
         )
 
     @staticmethod
