@@ -10,7 +10,7 @@ from torchvision.utils import draw_segmentation_masks
 class TrashDetector(pl.LightningModule):
     def __init__(
         self,
-        pretrained: bool = True,
+        pretrained: bool = False,
     ):
         super().__init__()
         self.model = torchvision.models.segmentation.deeplabv3_mobilenet_v3_large(  # torchvision.models.segmentation.deeplabv3_resnet101(
