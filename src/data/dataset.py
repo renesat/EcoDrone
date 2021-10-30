@@ -11,11 +11,34 @@ from torchvision.utils import draw_segmentation_masks
 
 
 class TrashDataset(Dataset):
-    def __init__(self, annotations_file, img_dir, transform=None):
+    def __init__(
+        self,
+        annotations_file,
+        img_dir,
+        train: bool = False,
+        val_data=None,
+        transform=None,
+    ):
+        if val_data is None:
+            val_data = ["0089", "0063", "0049", "0102"]
+
+        self.train = train
+        self.val_data = val_data
         self.annotations = pd.read_csv(annotations_file, sep=",")
         self.annotations["filename"] = (
             self.annotations["INPUT:image"].dropna().apply(lambda x: x.split("/")[-1])
         )
+        drop_raws = []
+        for i in range(len(self.annotations)):
+            video = self.annotations["filename"][i][:8]
+            # print(video)
+            if video in [f"DJI_{v}" for v in val_data]:
+                if train:
+                    drop_raws.append(i)
+            else:
+                if not train:
+                    drop_raws.append(i)
+        self.annotations = self.annotations.drop(list(set(drop_raws)))
 
         self.img_dir = Path(img_dir)
         self.transform = transform
@@ -61,12 +84,12 @@ class TrashDataset(Dataset):
         return mask
 
     def __getitem__(self, idx):
-        img_path = self.img_dir / self.annotations["filename"][idx]
+        img_path = self.img_dir / self.annotations["filename"].iloc[idx]
         image = Image.open(img_path)
         if self.transform:
             image = self.transform(image)
         mask = self.region_to_mask(
-            self.annotations["OUTPUT:path"][idx],
+            self.annotations["OUTPUT:path"].iloc[idx],
             image,
         )
         return image, mask
