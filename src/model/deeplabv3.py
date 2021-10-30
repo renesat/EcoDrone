@@ -22,12 +22,13 @@ class TrashDetector(pl.LightningModule):
             kernel_size=(1, 1),
             stride=(1, 1),
         )
-        self.model.aux_classifier[4] = nn.Conv2d(
-            10,
-            1,
-            kernel_size=(1, 1),
-            stride=(1, 1),
-        )
+        if pretrained:
+            self.model.aux_classifier[4] = nn.Conv2d(
+                10,
+                1,
+                kernel_size=(1, 1),
+                stride=(1, 1),
+            )
 
     def forward(self, x):
         return self.model(x)
