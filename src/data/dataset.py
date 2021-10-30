@@ -3,6 +3,7 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+import torchvision.transforms.functional as TVF
 from PIL import Image, ImageDraw
 from torch.utils.data import Dataset
 
@@ -19,6 +20,24 @@ class TrashDataset(Dataset):
 
     def __len__(self):
         return self.annotations.shape[0]
+
+    def view_item(self, idx):
+        img, _ = self[idx]
+        img = (
+            img * torch.Tensor([0.229, 0.224, 0.225]).to(img.device).resize(3, 1, 1)
+            + torch.Tensor(
+                [
+                    0.485,
+                    0.456,
+                    0.406,
+                ]
+            )
+            .to(img.device)
+            .resize(3, 1, 1)
+        )
+        img[img > 1] = 1
+        img[img < 0] = 0
+        return TVF.to_pil_image(img)
 
     @staticmethod
     def region_to_mask(region, image):
